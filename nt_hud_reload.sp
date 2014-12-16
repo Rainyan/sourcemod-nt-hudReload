@@ -2,7 +2,7 @@
 
 #include <sourcemod>
 
-#define PLUGIN_VERSION "1.0"
+#define PLUGIN_VERSION "1.0.1"
 
 public Plugin:myinfo =
 {
@@ -41,7 +41,8 @@ public Action:Command_HudReload(client, args)
 
 public Action:Timer_HudReload(Handle:timer, any:client)
 {
-	ClientCommand(client, "hud_reloadscheme");
+	if (IsValidClient(client))
+		ClientCommand(client, "hud_reloadscheme");
 }
 
 bool:IsValidClient(client)
