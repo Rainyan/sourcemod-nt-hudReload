@@ -41,6 +41,7 @@ public CvarCallback_Behaviour(Handle:cvar, const String:oldVal[], const String:n
 	if (g_isRoundStartHooked && !GetConVarInt(cvar_Behaviour))
 	{
 		UnhookEvent("game_round_start", Event_RoundStart);
+		g_isRoundStartHooked = false;
 		roundsSinceHudReload = 0;
 	}
 	
