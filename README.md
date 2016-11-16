@@ -1,12 +1,16 @@
 sourcemod-nt-hudReload
 ======================
 
-SourceMod plugin for Neotokyo to reload players' HUD view.
+Run hud_reloadscheme on yourself by typing !hud.
 
 Commands:
-  - <i>sm_hud</i> : Reload HUD manually
+* _sm_hud_ : Reload your HUD manually (same as hud_reloadscheme to console)
 
-Cvars:
-  - <i>sm_hud_behaviour</i> : If 0, only reload HUD upon player's !hud command. If positive integer, reload HUD automatically every X rounds. Default: 0.
+### Cvars
+* _sm_hud_behaviour_ : When should the plugin automatically reload players' HUD. 0: only reload when player uses sm_hud. Otherwise, reload every X rounds.
 
-Note that hud reloading will mess up the chat temporarily, so you may not want to do it every round.
+### Compile dependencies
+* SourceMod [Neotokyo include](https://github.com/softashell/sourcemod-nt-include)
+
+### Server dependencies
+* SourceMod 1.7 or newer
