@@ -60,8 +60,6 @@ public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadca
 	if (g_iRoundCount < GetConVarInt(g_hCvar_Behaviour))
 		return Plugin_Continue;
 
-	PrintToServer("TRIG!!");
-
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		// Client validity is checked by the function
