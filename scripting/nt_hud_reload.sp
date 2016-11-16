@@ -1,90 +1,95 @@
 #pragma semicolon 1
 
 #include <sourcemod>
+#include <neotokyo>
 
-#define PLUGIN_VERSION "1.1.1"
+#define PLUGIN_VERSION "1.2"
 
-new roundsSinceHudReload;
+int g_iRoundCount;
 
-new bool:g_isRoundStartHooked;
+bool g_bIsRoundStartHooked;
 
-new Handle:cvar_Behaviour;
+Handle g_hCvar_Behaviour;
 
-public Plugin:myinfo =
-{
-	name	 	=	"Automatic hud_reloadscheme",
+public Plugin myinfo = {
+	name	 			=	"Automatic hud_reloadscheme",
 	description	=	"Execute hud_reloadscheme every round start for everyone",
-	author		=	"Rain",
-	version		=	PLUGIN_VERSION,
-	url			=	"https://github.com/Rainyan/sourcemod-nt-hudReload"
+	author			=	"Rain",
+	version			=	PLUGIN_VERSION,
+	url					=	"https://github.com/Rainyan/sourcemod-nt-hudReload"
 };
 
-public OnPluginStart()
+public void OnPluginStart()
 {
 	RegConsoleCmd("sm_hud", Command_HudReload);
-	
-	cvar_Behaviour = CreateConVar("sm_hud_behaviour", "0", "When should the plugin automatically reload players' HUD. 0: only reload when player uses !hud. Otherwise, reload every X rounds.", _, true, 0.0);
-	HookConVarChange(cvar_Behaviour, CvarCallback_Behaviour);
+
+	g_hCvar_Behaviour = CreateConVar("sm_hud_behaviour", "0", "When should the plugin automatically reload players' HUD. 0: only reload when player uses sm_hud. Otherwise, reload every X rounds.", _, true, 0.0);
+	HookConVarChange(g_hCvar_Behaviour, CvarCallback_Behaviour);
+
+	AutoExecConfig(true);
 }
 
-public OnConfigsExecuted()
+public void OnConfigsExecuted()
 {
-	if (GetConVarInt(cvar_Behaviour))
+	if (GetConVarInt(g_hCvar_Behaviour) > 0)
 	{
 		HookEvent("game_round_start", Event_RoundStart);
-		g_isRoundStartHooked = true;
+		g_bIsRoundStartHooked = true;
 	}
 }
 
-public CvarCallback_Behaviour(Handle:cvar, const String:oldVal[], const String:newVal[])
+public void CvarCallback_Behaviour(Handle cvar, const char[] oldVal, const char[] newVal)
 {
-	if (g_isRoundStartHooked && !GetConVarInt(cvar_Behaviour))
+	int iNew = StringToInt(newVal);
+	if (g_bIsRoundStartHooked && iNew == 0)
 	{
 		UnhookEvent("game_round_start", Event_RoundStart);
-		g_isRoundStartHooked = false;
-		roundsSinceHudReload = 0;
+		g_bIsRoundStartHooked = false;
+		g_iRoundCount = 0;
 	}
-	
-	else if (!g_isRoundStartHooked && GetConVarInt(cvar_Behaviour))
-		HookEvent("game_round_start", Event_RoundStart);
-}
-
-public Action:Event_RoundStart(Handle:event, const String:name[], bool:dontBroadcast)
-{
-	roundsSinceHudReload++;
-	
-	if (roundsSinceHudReload == GetConVarInt(cvar_Behaviour))
+	else if (!g_bIsRoundStartHooked && iNew > 0)
 	{
-		roundsSinceHudReload = 0;
-		
-		for (new i = 1; i <= MaxClients; i++)
-		{
-			if (!IsValidClient(i))
-				continue;
-			
-			Command_HudReload(i, 1);
-		}
+		HookEvent("game_round_start", Event_RoundStart);
+		g_bIsRoundStartHooked = true;
 	}
 }
 
-public Action:Command_HudReload(client, args)
+public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadcast)
 {
-	CreateTimer(2.0, Timer_HudReload, client); // We're using a timer for the response message to be visible before HUD reset
-	
-	if (args == 0)
-		ReplyToCommand(client, "Reloading HUD..."); // Command initiated manually by user, respond.
+	g_iRoundCount++;
+	if (g_iRoundCount < GetConVarInt(g_hCvar_Behaviour))
+		return Plugin_Continue;
+
+	PrintToServer("TRIG!!");
+
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		// Client validity is checked by the function
+		ReloadHud(i);
+	}
+	g_iRoundCount = 0;
+
+	return Plugin_Handled;
 }
 
-public Action:Timer_HudReload(Handle:timer, any:client)
+public Action Command_HudReload(int client, int args)
 {
-	if (IsValidClient(client))
-		ClientCommand(client, "hud_reloadscheme");
+	// Timer before reloading HUD, because the HUD reload momentarily breaks chat
+	CreateTimer(2.0, Timer_HudReload, client);
+	ReplyToCommand(client, "Reloading HUD! This may break the chat for a couple of seconds...");
+
+	return Plugin_Handled;
 }
 
-bool:IsValidClient(client)
+public Action Timer_HudReload(Handle timer, any client)
 {
-	if (client > 0 && client <= MaxClients && IsClientConnected(client) && !IsFakeClient(client))
-		return true;
-	
-	return false;
+	ReloadHud(client);
+}
+
+void ReloadHud(int client)
+{
+	if (!IsValidClient(client) || IsFakeClient(client))
+		return;
+
+	ClientCommand(client, "hud_reloadscheme");
 }
