@@ -1,10 +1,10 @@
 sourcemod-nt-hudReload
 ======================
 
-Run hud_reloadscheme on yourself by typing !hud.
+Run _hud_reloadscheme_ on yourself by typing _!hud_.
 Also provides option to reset everyone's HUD every X rounds.
 
-Commands:
+### Commands
 * _sm_hud_ : Reload your HUD manually (same as hud_reloadscheme to console)
 
 ### Cvars
