@@ -3,7 +3,7 @@
 #include <sourcemod>
 #include <neotokyo>
 
-#define PLUGIN_VERSION "1.2"
+#define PLUGIN_VERSION "1.3.0"
 
 int g_iRoundCount;
 
@@ -12,11 +12,11 @@ bool g_bIsRoundStartHooked;
 Handle g_hCvar_Behaviour;
 
 public Plugin myinfo = {
-	name	 			=	"Automatic hud_reloadscheme",
+	name	 	=	"Automatic hud_reloadscheme",
 	description	=	"Execute hud_reloadscheme every round start for everyone",
-	author			=	"Rain",
-	version			=	PLUGIN_VERSION,
-	url					=	"https://github.com/Rainyan/sourcemod-nt-hudReload"
+	author		=	"Rain",
+	version		=	PLUGIN_VERSION,
+	url		=	"https://github.com/Rainyan/sourcemod-nt-hudReload"
 };
 
 public void OnPluginStart()
@@ -54,34 +54,32 @@ public void CvarCallback_Behaviour(Handle cvar, const char[] oldVal, const char[
 	}
 }
 
-public Action Event_RoundStart(Handle event, const char[] name, bool dontBroadcast)
+public void Event_RoundStart(Handle event, const char[] name, bool dontBroadcast)
 {
-	g_iRoundCount++;
-	if (g_iRoundCount < GetConVarInt(g_hCvar_Behaviour))
-		return Plugin_Continue;
-
-	for (int i = 1; i <= MaxClients; i++)
+	++g_iRoundCount;
+	if (g_iRoundCount >= GetConVarInt(g_hCvar_Behaviour))
 	{
-		// Client validity is checked by the function
-		ReloadHud(i);
+		for (int i = 1; i <= MaxClients; ++i)
+		{
+			// Client validity is checked by the function
+			ReloadHud(i);
+		}
+		g_iRoundCount = 0;
 	}
-	g_iRoundCount = 0;
-
-	return Plugin_Handled;
 }
 
 public Action Command_HudReload(int client, int args)
 {
 	// Timer before reloading HUD, because the HUD reload momentarily breaks chat
-	CreateTimer(2.0, Timer_HudReload, client);
+	CreateTimer(2.0, Timer_HudReload, GetClientUserId(client));
 	ReplyToCommand(client, "Reloading HUD! This may break the chat for a couple of seconds...");
 
 	return Plugin_Handled;
 }
 
-public Action Timer_HudReload(Handle timer, any client)
+public Action Timer_HudReload(Handle timer, int userid)
 {
-	ReloadHud(client);
+	ReloadHud(GetClientOfUserId(userid));
 }
 
 void ReloadHud(int client)
