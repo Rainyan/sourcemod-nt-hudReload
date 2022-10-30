@@ -3,7 +3,7 @@
 #include <sourcemod>
 #include <neotokyo>
 
-#define PLUGIN_VERSION "1.3.0"
+#define PLUGIN_VERSION "1.3.1"
 
 int g_iRoundCount;
 
@@ -80,6 +80,7 @@ public Action Command_HudReload(int client, int args)
 public Action Timer_HudReload(Handle timer, int userid)
 {
 	ReloadHud(GetClientOfUserId(userid));
+	return Plugin_Stop;
 }
 
 void ReloadHud(int client)
